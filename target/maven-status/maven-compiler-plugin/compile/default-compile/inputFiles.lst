@@ -1,0 +1,9 @@
+H:\Program\Jpackage\src\main\java\gold\debug\packager\AppMain.java
+H:\Program\Jpackage\src\main\java\gold\debug\packager\config\ConfigStore.java
+H:\Program\Jpackage\src\main\java\gold\debug\packager\config\PackagerConfig.java
+H:\Program\Jpackage\src\main\java\gold\debug\packager\core\JarManifestUtils.java
+H:\Program\Jpackage\src\main\java\gold\debug\packager\core\JPackageCommandBuilder.java
+H:\Program\Jpackage\src\main\java\gold\debug\packager\core\ProcessRunner.java
+H:\Program\Jpackage\src\main\java\gold\debug\packager\core\StagingManager.java
+H:\Program\Jpackage\src\main\java\gold\debug\packager\icon\IconConverter.java
+H:\Program\Jpackage\src\main\java\gold\debug\packager\ui\MainFrame.java

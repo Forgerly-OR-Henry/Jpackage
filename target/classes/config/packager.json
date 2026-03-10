@@ -1,0 +1,15 @@
+{
+  "jdkHome": "C:\\Program Files\\Java\\jdk-21",
+  "mainJarPath": "I:\\Program\\WindowsToLinux\\target\\jar\\WindowsToLinux.jar",
+  "extraJarPaths": [],
+  "mainClass": "gold.debug.wintolin.AppMain",
+  "appName": "hello",
+  "version": "1.0.0",
+  "outputDir": "I:\\Program",
+  "type": "app-image",
+  "winMenu": false,
+  "winShortcut": false,
+  "winConsole": false,
+  "winPerUserInstall": false,
+  "winDirChooser": false
+}
