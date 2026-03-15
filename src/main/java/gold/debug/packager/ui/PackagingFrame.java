@@ -39,17 +39,23 @@ public class PackagingFrame extends JPanel {
         JPanel jarPanel = new JPanel(new BorderLayout(6, 0));
         jarPanel.add(tfJarPath, BorderLayout.CENTER);
         jarPanel.add(btnJarBrowse, BorderLayout.EAST);
-        addRow("主 JAR", jarPanel, c, row++);
+        addNormalRow("主 JAR", jarPanel, c, row++);
 
         // 主类
         JPanel mainClassPanel = new JPanel(new BorderLayout(6, 0));
         mainClassPanel.add(tfMainClass, BorderLayout.CENTER);
         mainClassPanel.add(btnDetectMainClass, BorderLayout.EAST);
-        addRow("主类", mainClassPanel, c, row++);
+        addNormalRow("主类", mainClassPanel, c, row++);
 
-        // 依赖区
+        // 依赖列表
+        listExtraJars.setVisibleRowCount(6);
+        listExtraJars.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+
         JScrollPane depScrollPane = new JScrollPane(listExtraJars);
-        depScrollPane.setPreferredSize(new Dimension(480, 180));
+        depScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+        depScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        depScrollPane.setPreferredSize(new Dimension(480, 140));
+        depScrollPane.setMinimumSize(new Dimension(480, 140));
 
         JPanel depButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         depButtonPanel.add(btnAutoDeps);
@@ -61,7 +67,7 @@ public class PackagingFrame extends JPanel {
         depPanel.add(depScrollPane, BorderLayout.CENTER);
         depPanel.add(depButtonPanel, BorderLayout.SOUTH);
 
-        addRow("从包/依赖", depPanel, c, row++);
+        addLargeRow("从包/依赖", depPanel, c, row++);
 
         wireActions();
     }
@@ -114,23 +120,54 @@ public class PackagingFrame extends JPanel {
         btnClearJar.addActionListener(e -> extraJarModel.clear());
     }
 
-    private void addRow(String label, JComponent component, GridBagConstraints c, int row) {
+    /**
+     * 普通单行控件
+     */
+    private void addNormalRow(String label, JComponent component, GridBagConstraints c, int row) {
         c.gridx = 0;
         c.gridy = row;
         c.weightx = 0;
+        c.weighty = 0;
         c.gridwidth = 1;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.anchor = GridBagConstraints.NORTHWEST;
         add(new JLabel(label), c);
 
         c.gridx = 1;
         c.gridy = row;
         c.weightx = 1;
+        c.weighty = 0;
         c.gridwidth = 2;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        add(component, c);
+    }
+
+    /**
+     * 多行大区域控件，专门给依赖列表
+     */
+    private void addLargeRow(String label, JComponent component, GridBagConstraints c, int row) {
+        c.gridx = 0;
+        c.gridy = row;
+        c.weightx = 0;
+        c.weighty = 1;
+        c.gridwidth = 1;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.anchor = GridBagConstraints.NORTHWEST;
+        add(new JLabel(label), c);
+
+        c.gridx = 1;
+        c.gridy = row;
+        c.weightx = 1;
+        c.weighty = 1;
+        c.gridwidth = 2;
+        c.fill = GridBagConstraints.BOTH;
         add(component, c);
     }
 
     private void chooseJarFile(JTextField target) {
         JFileChooser fc = new JFileChooser();
         fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+
         int r = fc.showOpenDialog(this);
         if (r == JFileChooser.APPROVE_OPTION) {
             File f = fc.getSelectedFile();
@@ -185,10 +222,6 @@ public class PackagingFrame extends JPanel {
         return false;
     }
 
-    // =========================
-    // Getter
-    // =========================
-
     public String getJarPath() {
         return tfJarPath.getText().trim();
     }
@@ -204,10 +237,6 @@ public class PackagingFrame extends JPanel {
         }
         return result;
     }
-
-    // =========================
-    // Setter
-    // =========================
 
     public void setJarPath(String v) {
         tfJarPath.setText(v == null ? "" : v);
@@ -227,10 +256,6 @@ public class PackagingFrame extends JPanel {
             }
         }
     }
-
-    // =========================
-    // 控件访问（需要时可直接取）
-    // =========================
 
     public JTextField getTfJarPath() {
         return tfJarPath;

@@ -38,7 +38,7 @@ public class MainFrame extends JFrame {
     public MainFrame() {
         setTitle("JPackage GUI (Swing) - 稳定版");
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        setSize(1120, 780);
+        setSize(1180, 820);
         setLocationRelativeTo(null);
 
         JPanel root = new JPanel(new BorderLayout(10, 10));
@@ -49,22 +49,42 @@ public class MainFrame extends JFrame {
         packagingFrame = new PackagingFrame();
         cmdFrame = new CmdFrame();
 
-        JPanel topPanel = new JPanel(new GridLayout(1, 2, 10, 10));
-        topPanel.add(basicInfoFrame);
-        topPanel.add(packagingFrame);
-
-        root.add(topPanel, BorderLayout.NORTH);
-        root.add(cmdFrame, BorderLayout.CENTER);
+        root.add(buildTopButtonBar(), BorderLayout.NORTH);
+        root.add(buildCenterArea(), BorderLayout.CENTER);
         root.add(buildBottomPanel(), BorderLayout.SOUTH);
 
         wireActions();
 
-        // 自动加载配置
         loadConfigIntoUI(ConfigPath.loadOrDefault(ConfigPath.defaultConfigPath()));
 
-        // 初始刷新
         refreshTypeEnableState();
         refreshCommandPreview();
+    }
+
+    private JPanel buildTopButtonBar() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        panel.add(btnSaveCfg);
+        return panel;
+    }
+
+    private JComponent buildCenterArea() {
+        JPanel formPanel = new JPanel(new GridLayout(1, 2, 10, 10));
+        formPanel.add(basicInfoFrame);
+        formPanel.add(packagingFrame);
+
+        // 上：基础信息 + 打包输入
+        // 下：命令预览 + 执行日志
+        // 用纵向分割，避免顶部被压扁，保证 PackagingFrame 的依赖列表能显示足够高度
+        JSplitPane splitPane = new JSplitPane(
+                JSplitPane.VERTICAL_SPLIT,
+                formPanel,
+                cmdFrame
+        );
+        splitPane.setResizeWeight(0.46);
+        splitPane.setOneTouchExpandable(true);
+        splitPane.setContinuousLayout(true);
+
+        return splitPane;
     }
 
     private JPanel buildBottomPanel() {
@@ -74,6 +94,7 @@ public class MainFrame extends JFrame {
         leftPanel.add(new JLabel("打包类型："));
         leftPanel.add(cbType);
 
+        leftPanel.add(Box.createHorizontalStrut(10));
         leftPanel.add(new JLabel("Windows 选项："));
         leftPanel.add(ckWinMenu);
         leftPanel.add(ckWinShortcut);
@@ -82,7 +103,6 @@ public class MainFrame extends JFrame {
         leftPanel.add(ckDirChooser);
 
         JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
-        rightPanel.add(btnSaveCfg);
         rightPanel.add(btnBuildCmd);
         rightPanel.add(btnCopyCmd);
         rightPanel.add(btnRun);
@@ -123,6 +143,9 @@ public class MainFrame extends JFrame {
         ckConsole.addActionListener(e -> refreshCommandPreview());
         ckPerUser.addActionListener(e -> refreshCommandPreview());
         ckDirChooser.addActionListener(e -> refreshCommandPreview());
+
+        // 当窗口首次显示后再设一次 divider，避免某些 LaF 下初始比例不准
+        SwingUtilities.invokeLater(this::refreshCommandPreview);
     }
 
     private void refreshTypeEnableState() {
