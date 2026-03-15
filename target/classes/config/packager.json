@@ -1,10 +1,15 @@
 {
   "jdkHome": "C:\\Program Files\\Java\\jdk-21",
   "mainJarPath": "I:\\Program\\WindowsToLinux\\target\\jar\\WindowsToLinux.jar",
-  "extraJarPaths": [],
+  "extraJarPaths": [
+    "I:\\Program\\WindowsToLinux\\target\\jar\\lib\\flatlaf-3.7.jar",
+    "I:\\Program\\WindowsToLinux\\target\\jar\\lib\\jsch-2.27.7.jar"
+  ],
   "mainClass": "gold.debug.wintolin.AppMain",
   "appName": "hello",
+  "vendor": "",
   "version": "1.0.0",
+  "iconPath": "",
   "outputDir": "I:\\Program",
   "type": "app-image",
   "winMenu": false,
