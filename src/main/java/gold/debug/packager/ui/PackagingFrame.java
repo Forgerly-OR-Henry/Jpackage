@@ -35,19 +35,16 @@ public class PackagingFrame extends JPanel {
 
         int row = 0;
 
-        // 主 JAR
         JPanel jarPanel = new JPanel(new BorderLayout(6, 0));
         jarPanel.add(tfJarPath, BorderLayout.CENTER);
         jarPanel.add(btnJarBrowse, BorderLayout.EAST);
         addNormalRow("主 JAR", jarPanel, c, row++);
 
-        // 主类
         JPanel mainClassPanel = new JPanel(new BorderLayout(6, 0));
         mainClassPanel.add(tfMainClass, BorderLayout.CENTER);
         mainClassPanel.add(btnDetectMainClass, BorderLayout.EAST);
         addNormalRow("主类", mainClassPanel, c, row++);
 
-        // 依赖列表
         listExtraJars.setVisibleRowCount(6);
         listExtraJars.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
@@ -67,7 +64,7 @@ public class PackagingFrame extends JPanel {
         depPanel.add(depScrollPane, BorderLayout.CENTER);
         depPanel.add(depButtonPanel, BorderLayout.SOUTH);
 
-        addLargeRow("从包/依赖", depPanel, c, row++);
+        addLargeRow("从包/依赖", depPanel, c, row);
 
         wireActions();
     }
@@ -102,13 +99,16 @@ public class PackagingFrame extends JPanel {
             }
 
             try {
-                List<Path> deps = ManifestReader.getDependencies(Path.of(jarPath));
+                List<ManifestReader.DependencyItem> deps =
+                        ManifestReader.readClassesPaths(Path.of(jarPath));
+
                 extraJarModel.clear();
-                for (Path dep : deps) {
-                    if (dep != null) {
-                        extraJarModel.addElement(dep.toAbsolutePath().toString());
+                for (ManifestReader.DependencyItem item : deps) {
+                    if (item != null && item.sourcePath() != null) {
+                        extraJarModel.addElement(item.sourcePath().toAbsolutePath().toString());
                     }
                 }
+
                 JOptionPane.showMessageDialog(this, "已自动读取依赖，共 " + deps.size() + " 项。");
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "自动获取依赖失败：\n" + ex.getMessage());
@@ -120,9 +120,6 @@ public class PackagingFrame extends JPanel {
         btnClearJar.addActionListener(e -> extraJarModel.clear());
     }
 
-    /**
-     * 普通单行控件
-     */
     private void addNormalRow(String label, JComponent component, GridBagConstraints c, int row) {
         c.gridx = 0;
         c.gridy = row;
@@ -142,9 +139,6 @@ public class PackagingFrame extends JPanel {
         add(component, c);
     }
 
-    /**
-     * 多行大区域控件，专门给依赖列表
-     */
     private void addLargeRow(String label, JComponent component, GridBagConstraints c, int row) {
         c.gridx = 0;
         c.gridy = row;

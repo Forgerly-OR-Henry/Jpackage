@@ -1,12 +1,16 @@
 package gold.debug.packager.core;
 
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
-// 支持非胖包：主 jar + 从 jar
-public class StagingManager {
+public final class StagingManager {
+
+    private StagingManager() {
+    }
 
     public static class StagingResult {
         public final Path stagingDir;
@@ -20,24 +24,48 @@ public class StagingManager {
         }
     }
 
-    public static StagingResult stageJars(Path baseWorkDir, Path mainJar, List<Path> extraJars) throws IOException {
+    /**
+     * 保留 MANIFEST Class-Path 的相对目录结构进行复制
+     *
+     * 例如：
+     * a.jar      -> staging/a.jar
+     * lib/b.jar  -> staging/lib/b.jar
+     */
+    public static StagingResult stageJars(Path baseWorkDir,
+                                          Path mainJar,
+                                          List<ManifestReader.DependencyItem> dependencyItems) throws IOException {
         Files.createDirectories(baseWorkDir);
+
         Path staging = baseWorkDir.resolve("staging_" + System.currentTimeMillis());
         Files.createDirectories(staging);
 
-        // copy main jar
         Path mainDst = staging.resolve(mainJar.getFileName().toString());
         Files.copy(mainJar, mainDst, StandardCopyOption.REPLACE_EXISTING);
 
-        List<String> extraNames = new ArrayList<>();
-        for (Path p : extraJars) {
-            if (p == null) continue;
-            Path dst = staging.resolve(p.getFileName().toString());
-            Files.copy(p, dst, StandardCopyOption.REPLACE_EXISTING);
-            extraNames.add(dst.getFileName().toString());
+        List<String> copied = new ArrayList<>();
+
+        if (dependencyItems != null) {
+            for (ManifestReader.DependencyItem item : dependencyItems) {
+                if (item == null) continue;
+
+                Path src = item.sourcePath();
+                if (src == null) continue;
+
+                String relative = normalizeRelativePath(item.relativePath());
+                if (relative.isBlank()) continue;
+
+                Path dst = staging.resolve(relative).normalize();
+                Path parent = dst.getParent();
+                if (parent != null) {
+                    Files.createDirectories(parent);
+                }
+
+                Files.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
+                copied.add(staging.relativize(dst).toString().replace("\\", "/"));
+            }
         }
 
-        return new StagingResult(staging, mainDst.getFileName().toString(), extraNames);
+        return new StagingResult(staging, mainDst.getFileName().toString(), copied);
     }
 
     public static void tryDeleteDirectory(Path dir) {
@@ -47,9 +75,16 @@ public class StagingManager {
             Files.walk(dir)
                     .sorted((a, b) -> b.getNameCount() - a.getNameCount())
                     .forEach(p -> {
-                        try { Files.deleteIfExists(p); } catch (Exception ignored) {}
+                        try {
+                            Files.deleteIfExists(p);
+                        } catch (Exception ignored) {
+                        }
                     });
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
+    }
+
+    private static String normalizeRelativePath(String path) {
+        return path == null ? "" : path.replace("\\", "/");
     }
 }
-

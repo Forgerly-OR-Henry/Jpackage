@@ -17,6 +17,19 @@ public final class ManifestReader {
     }
 
     /**
+         * 依赖项：
+         * sourcePath   = 实际文件绝对路径
+         * relativePath = 相对主 jar 目录的路径（如 a.jar / lib/b.jar）
+         */
+        public record DependencyItem(Path sourcePath, String relativePath) {
+
+        @Override
+            public String toString() {
+                return relativePath + " -> " + sourcePath;
+            }
+        }
+
+    /**
      * 读取 jar 中的 MANIFEST.MF
      */
     public static Manifest readManifest(Path jarPath) throws Exception {
@@ -50,20 +63,18 @@ public final class ManifestReader {
     }
 
     /**
-     * 读取 Class-Path 中声明的依赖。
+     * 读取 Class-Path 中声明的依赖，并保留相对路径信息。
      *
      * 规则：
-     * 1. Class-Path 中每一项都按“相对于主 jar 所在目录”解析
-     * 2. 例如：
-     *    a.jar      -> <主jar目录>/a.jar
-     *    lib/b.jar  -> <主jar目录>/lib/b.jar
+     * 1. a.jar      -> <主jar目录>/a.jar
+     * 2. lib/b.jar  -> <主jar目录>/lib/b.jar
      * 3. 若任一依赖不存在，则抛异常
      */
-    public static List<Path> getDependencies(Path mainJarPath) throws Exception {
+    public static List<DependencyItem> readClassesPaths(Path mainJarPath) throws Exception {
         Manifest manifest = readManifest(mainJarPath);
         String classPath = manifest.getMainAttributes().getValue("Class-Path");
 
-        List<Path> result = new ArrayList<>();
+        List<DependencyItem> result = new ArrayList<>();
         if (classPath == null || classPath.trim().isEmpty()) {
             return result;
         }
@@ -73,19 +84,15 @@ public final class ManifestReader {
             throw new Exception("无法确定主 JAR 所在目录：" + mainJarPath.toAbsolutePath());
         }
 
-        // 用 Set 去重，同时保持原顺序
-        Set<Path> uniquePaths = new LinkedHashSet<>();
-
-        // MANIFEST 的 Class-Path 以空格分隔
         String[] entries = classPath.trim().split("\\s+");
+        Set<String> seen = new LinkedHashSet<>();
+
         for (String entry : entries) {
             if (entry == null || entry.trim().isEmpty()) {
                 continue;
             }
 
-            String raw = entry.trim();
-
-            // 按你的需求：直接按相对主 jar 目录处理
+            String raw = normalizeRelativePath(entry.trim());
             Path resolved = mainJarDir.resolve(raw).normalize();
 
             if (!Files.exists(resolved) || !Files.isRegularFile(resolved)) {
@@ -97,11 +104,16 @@ public final class ManifestReader {
                 );
             }
 
-            uniquePaths.add(resolved.toAbsolutePath());
+            if (seen.add(raw)) {
+                result.add(new DependencyItem(resolved.toAbsolutePath(), raw));
+            }
         }
 
-        result.addAll(uniquePaths);
         return result;
+    }
+
+    private static String normalizeRelativePath(String path) {
+        return path.replace("\\", "/");
     }
 
     private static void checkJarPath(Path jarPath) throws Exception {
@@ -114,6 +126,7 @@ public final class ManifestReader {
         if (!Files.isRegularFile(jarPath)) {
             throw new Exception("路径不是文件：" + jarPath.toAbsolutePath());
         }
+
         String fileName = jarPath.getFileName() == null ? "" : jarPath.getFileName().toString().toLowerCase();
         if (!fileName.endsWith(".jar")) {
             throw new Exception("不是 JAR 文件：" + jarPath.toAbsolutePath());
