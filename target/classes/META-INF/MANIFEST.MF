@@ -1,3 +1,5 @@
 Manifest-Version: 1.0
 Main-Class: gold.debug.packager.AppMain
+Class-Path: lib/gson-2.13.2.jar lib/flatlaf-3.7.jar lib/error_prone_anno
+ tations-2.41.0.jar
 
