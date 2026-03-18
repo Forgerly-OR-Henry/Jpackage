@@ -7,6 +7,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
+// 主 jar + 从 jar 打包
 public final class StagingManager {
 
     private StagingManager() {
