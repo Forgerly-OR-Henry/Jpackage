@@ -32,7 +32,7 @@ public class MainFrame extends JFrame {
     private String lastCommandPreview = "";
 
     public MainFrame() {
-        setTitle("JPackage GUI (Swing) - 稳定版");
+        setTitle("JPackage 1.0.0");
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setSize(1180, 820);
         setLocationRelativeTo(null);
